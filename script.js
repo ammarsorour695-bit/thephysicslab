@@ -199,29 +199,49 @@
     }
   }
 
-  // Define which materials are static (wood and metal)
-  const staticMaterials = ['wood', 'metal'];
-
-  // Define materials that float upward (particles)
+  // ---------- Material behavior lists ----------
+  const staticMaterials = ['wood', 'metal'];  // these will be static blocks
+  const solidMaterials = ['wood', 'metal', 'glass', 'ice', 'stone']; // spawn as solid blocks, not particles
   const floatMaterials = ['smoke', 'gas', 'steam', 'toxicfumes', 'acidfumes', 'smog', 'mustardgas', 'nervegas', 'aurora', 'ashcloud', 'duststorm', 'frostymist', 'thicksmoke', 'vaportrail'];
-
-  // Materials that are particles (have lifespan)
   const particleMaterials = [
     'fire', 'smoke', 'gas', 'plasma', 'steam', 'toxicfumes', 'acidfumes',
     'smog', 'mustardgas', 'nervegas', 'aurora', 'ashcloud', 'duststorm',
     'frostymist', 'thicksmoke', 'vaportrail', 'condensation', 'floatingfire',
     'largefire', 'corrosivefire', 'hydrogengas', 'fuel', 'fuelairblast'
   ];
-
-  // Materials that should have very low density (float)
   const lightMaterials = ['fire', 'smoke', 'gas', 'plasma', 'steam', 'toxicfumes', 'acidfumes', 'smog', 'mustardgas', 'nervegas', 'aurora', 'ashcloud', 'duststorm', 'frostymist', 'thicksmoke', 'vaportrail'];
 
   function spawnMaterial(mat, x, y, count = null) {
     if (isPaused) return;
+
+    // If material is a solid block, spawn a single rectangle
+    if (solidMaterials.includes(mat)) {
+      const color = materialColors[mat] || '#aaaaaa';
+      const isStatic = staticMaterials.includes(mat);
+      const size = 20;
+      const density = mat === 'metal' ? 0.02 : (mat === 'wood' ? 0.005 : 0.008);
+      const friction = mat === 'glass' ? 0.3 : 0.6;
+      const restitution = mat === 'glass' ? 0.2 : 0.05;
+      const body = Bodies.rectangle(x, y, size, size, {
+        density: density,
+        friction: friction,
+        restitution: restitution,
+        isStatic: isStatic,
+        render: { fillStyle: color },
+        label: mat,
+      });
+      body.materialType = mat;
+      body.isParticle = false;
+      body.isFloat = false;
+      body.isStatic = isStatic;
+      World.add(world, body);
+      return;
+    }
+
+    // For non-solid materials, spawn particles
     const color = materialColors[mat] || '#aaaaaa';
     const isParticle = particleMaterials.includes(mat);
     const isFloat = floatMaterials.includes(mat);
-    const isStatic = staticMaterials.includes(mat);
     const isLight = lightMaterials.includes(mat);
     const cnt = count || (isParticle ? 20 : 10);
     for (let i = 0; i < cnt; i++) {
@@ -237,11 +257,9 @@
         restitution: mat === 'sand' ? 0.05 : 0.1,
         render: { fillStyle: color },
         isSensor: false,
-        isStatic: isStatic,
         label: mat,
       };
       let body;
-      // Use different shapes for different materials
       if (['water', 'oil', 'acid', 'napalm', 'slick', 'acidwater', 'moltenmetal', 'moltenglass', 'lubricant', 'frozenoil'].includes(mat)) {
         body = Bodies.rectangle(px, py, size*0.8, size*0.8, opts);
       } else if (['sand', 'mud', 'tarsand', 'quicksand', 'stickysand', 'soil', 'permafrost'].includes(mat)) {
@@ -253,7 +271,7 @@
       }
       body.materialType = mat;
       body.isFloat = isFloat;
-      body.isStatic = isStatic;
+      body.isStatic = false;
       if (isParticle) {
         body.life = mat === 'fire' ? 200 + Math.random() * 100 : (mat === 'smoke' ? 300 + Math.random() * 150 : 300 + Math.random() * 150);
         body.isParticle = true;
@@ -275,7 +293,7 @@
         body.density = 0.006;
       }
       if (mat === 'oil') {
-        body.density = 0.0015; // lighter than water
+        body.density = 0.0015;
       }
       if (mat === 'water') {
         body.density = 0.003;
@@ -348,7 +366,7 @@
     World.add(world, stone);
   }
 
-  // ---------- Reaction system (unchanged) ----------
+  // ---------- Reaction system ----------
   const reactionMap = {
     'water_fire': { result: 'steam', count: 15 },
     'water_oil': { result: 'slick', count: 8 },
@@ -556,93 +574,74 @@
 
       const mat = body.materialType || body.label;
 
-      // ----- Water: flows down and spreads horizontally -----
+      // Water: flows down and spreads horizontally
       if (mat === 'water') {
-        // Apply gravity already handled by engine, but we add slight horizontal drift when on ground
-        // Check if body is near ground (velocity low and position not moving much)
         if (Math.abs(body.velocity.y) < 0.5 && body.position.y > height - 50) {
-          // Spread horizontally
-          const spread = (Math.random() - 0.5) * 0.02;
-          Body.applyForce(body, body.position, { x: spread, y: 0 });
+          Body.applyForce(body, body.position, { x: (Math.random() - 0.5) * 0.02, y: 0 });
         }
       }
 
-      // ----- Oil: lighter than water, floats upward if water below -----
+      // Oil: lighter than water, floats upward
       if (mat === 'oil') {
-        // Check for water below (simple: if there's a water body below, apply upward force)
-        // We'll just apply a slight upward force always, but less than water's gravity
         Body.applyForce(body, body.position, { x: 0, y: -0.001 });
-        // Also spread horizontally
         if (Math.abs(body.velocity.y) < 0.5) {
           Body.applyForce(body, body.position, { x: (Math.random()-0.5)*0.01, y: 0 });
         }
       }
 
-      // ----- Acid: flows like water but more corrosive (already handled by reactions) -----
+      // Acid: flows like water
       if (mat === 'acid') {
         if (Math.abs(body.velocity.y) < 0.5 && body.position.y > height - 50) {
           Body.applyForce(body, body.position, { x: (Math.random()-0.5)*0.02, y: 0 });
         }
       }
 
-      // ----- Lava: very slow, heavy -----
+      // Lava: very slow, heavy
       if (mat === 'lava') {
-        // Reduce velocity - make it sluggish
         Body.setVelocity(body, {
           x: body.velocity.x * 0.98,
           y: body.velocity.y * 0.98
         });
-        // Spread slowly
         if (Math.abs(body.velocity.y) < 0.2) {
           Body.applyForce(body, body.position, { x: (Math.random()-0.5)*0.005, y: 0 });
         }
       }
 
-      // ----- Fire: floats up rapidly, with slight sway -----
+      // Fire: floats up rapidly, with sway
       if (mat === 'fire') {
         Body.applyForce(body, body.position, { x: (Math.random()-0.5)*0.01, y: -0.015 });
-        // Flicker: random small pushes
         Body.applyForce(body, body.position, { x: (Math.random()-0.5)*0.005, y: 0 });
       }
 
-      // ----- Smoke: floats up faster and more erratically -----
+      // Smoke: floats up faster and erratic
       if (mat === 'smoke') {
         Body.applyForce(body, body.position, { x: (Math.random()-0.5)*0.02, y: -0.02 });
-        // More erratic
         Body.applyForce(body, body.position, { x: (Math.random()-0.5)*0.01, y: 0 });
       }
 
-      // ----- Sand: piles up (high friction, low restitution) already set -----
-      // No extra force needed, just physics params
-
-      // ----- Napalm: sticky, slow flow -----
+      // Napalm: sticky, slow flow
       if (mat === 'napalm') {
-        // Slow down
         Body.setVelocity(body, {
           x: body.velocity.x * 0.95,
           y: body.velocity.y * 0.95
         });
-        // Sticky: if near a wall, cling (we'll let friction handle it)
       }
 
-      // ----- Plasma: erratic, defies gravity -----
+      // Plasma: erratic, defies gravity
       if (mat === 'plasma') {
-        // Random forces in all directions
         const angle = Math.random() * 2 * Math.PI;
         const force = 0.01 + Math.random() * 0.02;
         Body.applyForce(body, body.position, { x: Math.cos(angle) * force, y: Math.sin(angle) * force });
-        // Also slight upward bias
         Body.applyForce(body, body.position, { x: 0, y: -0.002 });
-        // Flicker color? Can't change per frame easily, but we can set render style periodically
-        // We'll do it in the render loop? Instead, we'll just let it be.
       }
 
-      // ----- Gas: floats up like smoke but less erratic -----
+      // Gas: floats up like smoke but steadier
       if (mat === 'gas') {
         Body.applyForce(body, body.position, { x: (Math.random()-0.5)*0.005, y: -0.015 });
       }
 
-      // Wood and metal are static (isStatic=true), so no forces applied.
+      // Sand: high friction and low restitution already set
+      // Wood and metal are static, so no forces
     });
 
     // Particle lifespan
