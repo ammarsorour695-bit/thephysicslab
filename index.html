@@ -4,13 +4,18 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
   <title>Pixel Physics Sandbox</title>
+  <!-- Matter.js from CDN -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/matter-js/0.19.0/matter.min.js"></script>
+  <!-- Custom styles -->
   <link rel="stylesheet" href="style.css">
+  <!-- Favicon -->
   <link rel="icon" type="image/x-icon" href="/favicon.ico">
 </head>
 <body>
-  <!-- Toolbar (same as before) -->
+
+  <!-- Toolbar -->
   <div id="toolbar">
+    <!-- Tools -->
     <div class="group">
       <span class="group-label">tools</span>
       <button class="pixel-btn tool-active" data-tool="drag">grab</button>
@@ -22,6 +27,7 @@
       <button class="pixel-btn" data-tool="wind">wind</button>
       <button class="pixel-btn" data-tool="explode">boom</button>
     </div>
+    <!-- Shapes -->
     <div class="group">
       <span class="group-label">shapes</span>
       <button class="pixel-btn" data-shape="box">box</button>
@@ -34,11 +40,13 @@
       <button class="pixel-btn" data-shape="wheel">wheel</button>
       <button class="pixel-btn" data-shape="bridge">bridge</button>
     </div>
+    <!-- Modifiers -->
     <div class="group">
       <span class="group-label">mod</span>
       <button class="pixel-btn" data-mod="light">light</button>
       <button class="pixel-btn" data-mod="heavy">heavy</button>
     </div>
+    <!-- Materials -->
     <div class="group">
       <span class="group-label">materials</span>
       <button class="pixel-btn material btn-water" data-material="water">wat</button>
@@ -59,14 +67,21 @@
     </div>
   </div>
 
+  <!-- Canvas container -->
   <div id="canvas-container">
-    <div id="demo-overlay">
-      <strong></strong>click shape/material → spawn</strong><br>
-      <span class="key">drag</span> move · <span class="key">del</span> remove<br>
-      <span class="key">R</span> reset · <span class="key">Space</span> pause · <span class="key">B</span> boom
+    <!-- Title + Demo overlay -->
+    <div id="top-right">
+      <div id="lab-title">THE ALCHEMY LAB</div>
+      <div id="lab-demo">demo</div>
+      <div id="demo-overlay">
+        <strong>🖱️ click shape/material → spawn</strong><br>
+        <span class="key">drag</span> move · <span class="key">del</span> remove<br>
+        <span class="key">R</span> reset · <span class="key">Space</span> pause · <span class="key">B</span> boom
+      </div>
     </div>
   </div>
 
+  <!-- Main JavaScript -->
   <script src="script.js"></script>
 </body>
 </html>

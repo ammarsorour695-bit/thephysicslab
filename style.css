@@ -177,3 +177,71 @@ body {
   #canvas-container { height: calc(100vh - 60px); }
   #demo-overlay { font-size: 9px; padding: 4px 8px; top: 6px; right: 8px; max-width: 140px; }
 }
+/* ----- TOP RIGHT TITLE + DEMO ----- */
+#top-right {
+  position: absolute;
+  top: 12px;
+  right: 16px;
+  z-index: 20;
+  pointer-events: none;
+  image-rendering: pixelated;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+}
+
+#lab-title {
+  font-family: 'Courier New', Courier, monospace;
+  font-size: 16px;
+  font-weight: bold;
+  color: #6a8aaa;
+  text-shadow: 1px 1px 0 #000, 0 0 10px rgba(106, 138, 170, 0.3);
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  background: rgba(0, 0, 0, 0.6);
+  padding: 4px 12px;
+  border: 2px solid #3a4a6a;
+  border-radius: 2px;
+  margin-bottom: 2px;
+}
+
+#lab-demo {
+  font-family: 'Courier New', Courier, monospace;
+  font-size: 11px;
+  color: #666;
+  text-shadow: 1px 1px 0 #000;
+  letter-spacing: 1px;
+  text-transform: lowercase;
+  background: rgba(0, 0, 0, 0.4);
+  padding: 0 12px 4px 12px;
+  margin-bottom: 6px;
+  border-bottom: 1px solid #2a2a2a;
+}
+
+/* Update existing demo-overlay to work with the new layout */
+#demo-overlay {
+  color: #888;
+  font-size: 11px;
+  font-family: 'Courier New', monospace;
+  background: rgba(0, 0, 0, 0.8);
+  padding: 8px 14px;
+  border: 2px solid #333;
+  border-radius: 4px;
+  pointer-events: none;
+  text-shadow: 1px 1px 0 #000;
+  line-height: 1.6;
+  image-rendering: pixelated;
+  text-align: right;
+  max-width: 200px;
+  margin-top: 2px;
+}
+#demo-overlay strong { color: #aaa; }
+#demo-overlay .key { color: #6a8aaa; }
+
+/* Responsive */
+@media (max-width: 720px) {
+  #lab-title { font-size: 12px; padding: 2px 8px; letter-spacing: 1px; }
+  #lab-demo { font-size: 9px; padding: 0 8px 2px 8px; }
+  #demo-overlay { font-size: 9px; padding: 4px 8px; max-width: 140px; }
+  #top-right { top: 6px; right: 8px; }
+}
