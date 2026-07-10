@@ -200,8 +200,8 @@
   }
 
   // ---------- Material behavior lists ----------
-  const staticMaterials = ['wood', 'metal'];  // these will be static blocks
-  const solidMaterials = ['wood', 'metal', 'glass', 'ice', 'stone']; // spawn as solid blocks, not particles
+  const staticMaterials = ['wood', 'metal'];
+  const solidMaterials = ['wood', 'metal', 'glass', 'ice', 'stone'];
   const floatMaterials = ['smoke', 'gas', 'steam', 'toxicfumes', 'acidfumes', 'smog', 'mustardgas', 'nervegas', 'aurora', 'ashcloud', 'duststorm', 'frostymist', 'thicksmoke', 'vaportrail'];
   const particleMaterials = [
     'fire', 'smoke', 'gas', 'plasma', 'steam', 'toxicfumes', 'acidfumes',
@@ -214,7 +214,7 @@
   function spawnMaterial(mat, x, y, count = null) {
     if (isPaused) return;
 
-    // If material is a solid block, spawn a single rectangle
+    // Solid materials – spawn as single block
     if (solidMaterials.includes(mat)) {
       const color = materialColors[mat] || '#aaaaaa';
       const isStatic = staticMaterials.includes(mat);
@@ -238,7 +238,7 @@
       return;
     }
 
-    // For non-solid materials, spawn particles
+    // Non-solid materials – spawn particles
     const color = materialColors[mat] || '#aaaaaa';
     const isParticle = particleMaterials.includes(mat);
     const isFloat = floatMaterials.includes(mat);
@@ -250,11 +250,21 @@
       const px = x + Math.cos(angle) * dist;
       const py = y + Math.sin(angle) * dist - 6;
       const size = 3 + Math.random() * 8;
-      const density = isLight ? 0.0001 : (mat === 'lava' ? 0.006 : (mat === 'oil' ? 0.002 : (mat === 'acid' ? 0.003 : 0.002)));
+      let density = isLight ? 0.0001 : (mat === 'lava' ? 0.006 : (mat === 'oil' ? 0.002 : (mat === 'acid' ? 0.003 : 0.002)));
+      let friction = mat === 'sand' ? 0.9 : (mat === 'napalm' ? 0.9 : 0.3);
+      let restitution = mat === 'sand' ? 0.05 : 0.1;
+
+      // Water parameters
+      if (mat === 'water') {
+        density = 0.004;
+        friction = 0.5;
+        restitution = 0.02;
+      }
+
       const opts = {
         density: density,
-        friction: mat === 'sand' ? 0.9 : (mat === 'napalm' ? 0.9 : 0.3),
-        restitution: mat === 'sand' ? 0.05 : 0.1,
+        friction: friction,
+        restitution: restitution,
         render: { fillStyle: color },
         isSensor: false,
         label: mat,
@@ -279,7 +289,6 @@
         body.isParticle = false;
         body.life = Infinity;
       }
-      // Special properties for specific materials
       if (mat === 'sand') {
         body.friction = 0.9;
         body.restitution = 0.02;
@@ -294,9 +303,6 @@
       }
       if (mat === 'oil') {
         body.density = 0.0015;
-      }
-      if (mat === 'water') {
-        body.density = 0.003;
       }
       if (mat === 'acid') {
         body.density = 0.003;
@@ -357,9 +363,14 @@
     }
   }
 
-  function spawnStone(x, y, color = '#4a4a4a', label = 'stone') {
+  // Modified spawnStone with isStatic parameter
+  function spawnStone(x, y, color = '#4a4a4a', label = 'stone', isStatic = false) {
     const stone = Bodies.rectangle(x, y, 20, 20, {
-      density: 0.008, friction: 0.8, render: { fillStyle: color }, label: label
+      density: 0.008,
+      friction: 0.8,
+      render: { fillStyle: color },
+      label: label,
+      isStatic: isStatic
     });
     stone.materialType = label;
     stone.isParticle = false;
@@ -367,11 +378,12 @@
   }
 
   // ---------- Reaction system ----------
+  // Updated: water_fire -> steam (already fine), water_lava -> obsidian (static)
   const reactionMap = {
     'water_fire': { result: 'steam', count: 15 },
     'water_oil': { result: 'slick', count: 8 },
     'water_acid': { result: 'toxicfumes', count: 12 },
-    'water_lava': { result: 'stone', count: 1 },
+    'water_lava': { result: 'obsidian', count: 1 },   // was 'stone', now obsidian
     'water_smoke': { result: 'soot', count: 10 },
     'water_gas': { result: 'bubbles', count: 10 },
     'water_sand': { result: 'mud', count: 8 },
@@ -480,7 +492,7 @@
     const matB = b.materialType || b.label;
     if (!matA || !matB) return;
 
-    // Fire + burnable => smoke
+    // Fire + burnable => smoke (already handled below, but we keep this extra)
     if ((matA === 'fire' || matA === 'lava' || matA === 'largefire' || matA === 'inferno') &&
         ['wood', 'oil', 'gas', 'chemical', 'napalm', 'dummy'].includes(matB)) {
       spawnSmoke(posX, posY, 8);
@@ -501,8 +513,14 @@
     const result = reaction.result;
     const count = reaction.count || 10;
 
+    // Special case: obsidian should be static
+    if (result === 'obsidian') {
+      spawnStone(posX, posY, materialColors['obsidian'] || '#2a2a2a', 'obsidian', true);
+      return;
+    }
+
     const blockResults = [
-      'stone', 'obsidian', 'glasspane', 'mirror', 'beaker', 'framedglass', 'lens', 'iceblock',
+      'stone', 'glasspane', 'mirror', 'beaker', 'framedglass', 'lens', 'iceblock',
       'dryice', 'fulgurite', 'etchedglass', 'smokedglass', 'brittle', 'coldmetal', 'frozenwood',
       'permafrost', 'alloy', 'reinforcedwood', 'preservedwood', 'plastic', 'lubricant',
       'moltenmetal', 'moltenglass', 'charcoal', 'ash', 'soot', 'tar', 'rust', 'mud', 'soil',
@@ -512,7 +530,7 @@
       'acidwater', 'slush', 'neonlight', 'aurora'
     ];
     if (blockResults.includes(result)) {
-      spawnStone(posX, posY, materialColors[result] || '#4a4a4a', result);
+      spawnStone(posX, posY, materialColors[result] || '#4a4a4a', result, false);
     } else if (['explosion', 'supernova', 'inferno', 'fuelairblast', 'maxdestruction', 'largefire', 'magma'].includes(result)) {
       createExplosion(posX, posY, 25);
     } else if (result === 'water' || result === 'steam' || result === 'steamcloud') {
@@ -576,8 +594,9 @@
 
       // Water: flows down and spreads horizontally
       if (mat === 'water') {
-        if (Math.abs(body.velocity.y) < 0.5 && body.position.y > height - 50) {
-          Body.applyForce(body, body.position, { x: (Math.random() - 0.5) * 0.02, y: 0 });
+        if (Math.abs(body.velocity.y) < 0.5 && body.position.y > height - 40) {
+          const spreadForce = (Math.random() - 0.5) * 0.03;
+          Body.applyForce(body, body.position, { x: spreadForce, y: 0 });
         }
       }
 
@@ -591,8 +610,8 @@
 
       // Acid: flows like water
       if (mat === 'acid') {
-        if (Math.abs(body.velocity.y) < 0.5 && body.position.y > height - 50) {
-          Body.applyForce(body, body.position, { x: (Math.random()-0.5)*0.02, y: 0 });
+        if (Math.abs(body.velocity.y) < 0.5 && body.position.y > height - 40) {
+          Body.applyForce(body, body.position, { x: (Math.random()-0.5)*0.03, y: 0 });
         }
       }
 
@@ -639,9 +658,6 @@
       if (mat === 'gas') {
         Body.applyForce(body, body.position, { x: (Math.random()-0.5)*0.005, y: -0.015 });
       }
-
-      // Sand: high friction and low restitution already set
-      // Wood and metal are static, so no forces
     });
 
     // Particle lifespan
