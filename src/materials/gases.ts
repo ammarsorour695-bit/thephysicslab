@@ -53,25 +53,6 @@ export const gases: Material[] = [
     }
   },
   {
-    id: 'plasma',
-    label: 'Plasma',
-    category: 'gas' as any,
-    color: '#6a3a8a',
-    density: 0.00005,
-    friction: 0.05,
-    restitution: 0.4,
-    isStatic: false,
-    isParticle: true,
-    isFloat: true,
-    life: 150,
-    behavior: (body: Matter.Body) => {
-      const angle = Math.random() * 2 * Math.PI;
-      const force = 0.01 + Math.random() * 0.02;
-      Matter.Body.applyForce(body, body.position, { x: Math.cos(angle) * force, y: Math.sin(angle) * force });
-      Matter.Body.applyForce(body, body.position, { x: 0, y: -0.002 });
-    }
-  },
-  {
     id: 'steam',
     label: 'Steam',
     category: 'gas' as any,

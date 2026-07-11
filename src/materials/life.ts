@@ -2,6 +2,7 @@ import { Material } from '../types';
 import Matter from 'matter-js';
 
 export const lifeMaterials: Material[] = [
+  // ... existing (dummy, moss, soil, grass) ...
   {
     id: 'dummy',
     label: 'Dummy',
@@ -53,5 +54,32 @@ export const lifeMaterials: Material[] = [
     isParticle: true,
     isFloat: false,
     behavior: () => {}
+  },
+  // NEW: Firefly – flies around erratically
+  {
+    id: 'firefly',
+    label: 'Firefly',
+    category: 'life' as any,
+    color: '#eacc4a',
+    density: 0.0002,
+    friction: 0.05,
+    restitution: 0.3,
+    isStatic: false,
+    isParticle: false,
+    isFloat: true,
+    behavior: (body: Matter.Body) => {
+      // erratic flight: random impulses
+      const angle = Math.random() * 2 * Math.PI;
+      const force = 0.002 + Math.random() * 0.005;
+      Matter.Body.applyForce(body, body.position, {
+        x: Math.cos(angle) * force,
+        y: Math.sin(angle) * force - 0.001 // slight upward bias
+      });
+      // also dampen velocity a bit to avoid going too fast
+      Matter.Body.setVelocity(body, {
+        x: body.velocity.x * 0.98,
+        y: body.velocity.y * 0.98
+      });
+    }
   }
 ];
