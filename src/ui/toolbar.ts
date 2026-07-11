@@ -22,17 +22,21 @@ const categories = [
   { id: 'gas', label: 'Gases', materialIds: ['fire', 'smoke', 'gas', 'plasma', 'steam'] },
   { id: 'liquid', label: 'Liquids', materialIds: ['water', 'oil', 'acid', 'lava', 'napalm'] },
   { id: 'solid', label: 'Solids', materialIds: ['sand', 'metal', 'wood', 'glass', 'ice', 'stone', 'obsidian', 'brick'] },
+  { id: 'food', label: 'Food', materialIds: ['bread', 'meat', 'cheese', 'apple', 'egg', 'sugar', 'salt'] },
+  { id: 'chemicals', label: 'Chemicals', materialIds: ['chemical', 'sulfur', 'saltpeter', 'phosphorus', 'mercury', 'radioactive'] },
 ];
 
 let selectedTool = 'drag';
 let selectedMaterial: string | null = null;
 let selectedShape: string | null = null;
 let modifier: 'normal' | 'light' | 'heavy' = 'normal';
-let isPaused = false;
 let windActive = false;
 let windDirection = 1;
 
 export function buildToolbar(container: HTMLElement) {
+  // Clear container
+  container.innerHTML = '';
+
   // Tools group
   const toolsGroup = document.createElement('div');
   toolsGroup.className = 'group';

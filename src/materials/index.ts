@@ -3,10 +3,13 @@ import { liquids } from './liquids';
 import { gases } from './gases';
 import { solids } from './solids';
 import { lifeMaterials } from './life';
+import { foodMaterials } from './food';
+import { chemicalMaterials } from './chemicals';
 
 export const materialRegistry: Record<string, Material> = {};
 
-[...liquids, ...gases, ...solids, ...lifeMaterials].forEach(mat => {
+// Merge all categories
+[...liquids, ...gases, ...solids, ...lifeMaterials, ...foodMaterials, ...chemicalMaterials].forEach(mat => {
   materialRegistry[mat.id] = mat;
 });
 
